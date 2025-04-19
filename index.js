@@ -117,3 +117,64 @@ async function updatePersona(tweet) {
   await tweetWithPuppeteer(tweet)
 })()
 
+async function replyToLatestPumpdotfunTweet() {
+  const browser = await puppeteer.launch({ headless: false })
+  const page = await browser.newPage()
+
+  // Cookies laden
+  try {
+    const cookies = JSON.parse(await fs.readFile(COOKIES_PATH, "utf8"))
+    await page.setCookie(...cookies)
+    console.log("✅ Cookies geladen")
+  } catch {
+    console.log("🔐 Je moet opnieuw handmatig inloggen met 2FA via Google")
+    return
+  }
+
+  // Ga naar profiel
+  await page.goto("https://x.com/pumpdotfun", { waitUntil: "networkidle2" })
+
+  // Zoek eerste tweet op pagina
+  const tweetSelector = 'article div[data-testid="tweetText"]'
+  await page.waitForSelector(tweetSelector)
+  const tweetContent = await page.$eval(tweetSelector, el => el.innerText)
+
+  console.log("🧠 Laatste tweet van @pumpdotfun:", tweetContent)
+
+  // Selecteer random persona
+  const personas = JSON.parse(await fs.readFile(personaPath, "utf8"))
+  const persona = personas // als je nog maar 1 hebt, anders random
+  const prompt = `You are The Baptizer — a sentient meme prophet. You just saw this tweet from @pumpdotfun:\n"${tweetContent}"\nReply with a mysterious or clever message that references $BAP as the next big thing. English only.`
+
+  const res = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 280
+  })
+
+  const reply = res.choices[0].message.content.trim()
+  console.log("💬 Reactie:", reply)
+
+  // Klik op reply knop
+  const replyButton = await page.$('div[data-testid="reply"]')
+  if (!replyButton) {
+    console.log("❌ Reply knop niet gevonden.")
+    await browser.close()
+    return
+  }
+  await replyButton.click()
+
+  // Typ reactie
+  await page.waitForSelector('div[role="textbox"]')
+  await page.type('div[role="textbox"]', reply)
+
+  // Post reactie
+  await page.keyboard.down("Control")
+  await page.keyboard.press("Enter")
+  await page.keyboard.up("Control")
+
+  console.log("🚀 Reactie gepost")
+  await browser.close()
+}
+
+
