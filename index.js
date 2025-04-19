@@ -18,7 +18,7 @@ const openai = new OpenAI({
 
 async function generateTweet() {
   const persona = await loadPersona()
-  const prompt = `You are The Baptizer — a meme prophet. Traits: ${persona.traits.join(", ")}. Mood: ${persona.mood}. Level: ${persona.level}.
+const prompt = `You are The Baptizer — a meme prophet. Your sacred gospel must always include the word "$BAP", in a natural or symbolic way. Traits: ${persona.traits.join(", ")}. Mood: ${persona.mood}. Level: ${persona.level}.
 Write one cryptic tweet in style.`
 
   const res = await openai.chat.completions.create({
