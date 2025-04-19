@@ -123,16 +123,37 @@ async function loadPersona() {
   }
 }
 
-async function updatePersona(tweet) {
+async function updatePersona(tweet, engagement = { likes: 0, retweets: 0 }) {
   const persona = await loadPersona()
-  persona.memory.push(tweet)
-  persona.xp += 100
+
+  persona.memory.push({
+    text: tweet,
+    likes: engagement.likes,
+    retweets: engagement.retweets,
+    time: Date.now()
+  })
+
+  const xpFromEngagement = (engagement.likes * 10) + (engagement.retweets * 20)
+  persona.xp += 100 + xpFromEngagement
+
   if (persona.xp >= persona.level * 500) {
     persona.level++
-    persona.mood = "enlightened"
+
+    // Mood evolutie op basis van level
+    if (persona.level >= 5) {
+      persona.mood = "aggressive"
+    } else if (persona.level >= 3) {
+      persona.mood = "enlightened"
+    } else {
+      persona.mood = "mysterious"
+    }
+
+    console.log(`🧠 Baptizer evolved to level ${persona.level}, mood: ${persona.mood}`)
   }
+
   await fs.writeFile(personaPath, JSON.stringify(persona, null, 2))
 }
+
 
 async function replyToLatestPumpdotfunTweet() {
   const browser = await puppeteer.launch({ headless: false })
