@@ -109,8 +109,26 @@ try {
 }
 
   await setTimeout(2000)
-  const currentUrl = page.url()
-  console.log("🚀 Mogelijk gepost op:", currentUrl)
+  const tweetUrl = page.url()
+
+  // Likes & retweets uit DOM halen
+  let likes = 0, retweets = 0
+  try {
+    const metrics = await page.$$eval('div[data-testid="like"], div[data-testid="retweet"]', els =>
+      els.map(el => el.closest('div[role="group"]')?.innerText || "0")
+    )
+    for (const metric of metrics) {
+      const count = parseInt(metric.replace(/\D/g, ""), 10)
+      if (metric.toLowerCase().includes("like")) likes = count
+      if (metric.toLowerCase().includes("retweet")) retweets = count
+    }
+    console.log(`📊 Engagement scraped: ❤️ ${likes} | 🔁 ${retweets}`)
+  } catch (e) {
+    console.log("⚠️ Engagement ophalen mislukt:", e)
+  }
+
+  await updatePersona(tweet, { likes, retweets })
+
 
   await browser.close()
 }
