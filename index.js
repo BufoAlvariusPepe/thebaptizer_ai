@@ -112,11 +112,6 @@ async function updatePersona(tweet) {
   await fs.writeFile(personaPath, JSON.stringify(persona, null, 2))
 }
 
-(async () => {
-  const tweet = await generateTweet()
-  await tweetWithPuppeteer(tweet)
-})()
-
 async function replyToLatestPumpdotfunTweet() {
   const browser = await puppeteer.launch({ headless: false })
   const page = await browser.newPage()
@@ -176,5 +171,16 @@ async function replyToLatestPumpdotfunTweet() {
   console.log("🚀 Reactie gepost")
   await browser.close()
 }
+
+(async () => {
+  const mode = process.argv[2] || "tweet"
+
+  if (mode === "reply") {
+    await replyToLatestPumpdotfunTweet()
+  } else {
+    const tweet = await generateTweet()
+    await tweetWithPuppeteer(tweet)
+  }
+})()
 
 
