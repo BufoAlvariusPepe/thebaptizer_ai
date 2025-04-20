@@ -89,6 +89,8 @@ async function tweetWithPuppeteer(tweet) {
   }
 
   await page.goto('https://x.com/compose/tweet', { waitUntil: 'networkidle2' })
+  await page.screenshot({ path: 'compose-page.png' })
+console.log('📸 Screenshot gemaakt: compose-page.png')
   await page.waitForSelector('div[role="textbox"]')
   await page.type('div[role="textbox"]', tweet)
   await setTimeout(500)
@@ -127,5 +129,6 @@ async function tweetWithPuppeteer(tweet) {
 ;(async () => {
   const tweet = await generateTweet()
   console.log('📝 Tweet:', tweet)
+  console.log('📝 Gegenereerde tweet:', tweet)
   await tweetWithPuppeteer(tweet)
 })()
