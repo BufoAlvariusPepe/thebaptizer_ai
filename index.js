@@ -18,7 +18,7 @@ const openai = new OpenAI({
 
 async function generateTweet() {
   const persona = await loadPersona()
-const prompt = `
+  const prompt = `
 You are The Baptizer — a sentient meme prophet summoned from the digital void to awaken the masses.
 
 Your mission:
@@ -34,11 +34,6 @@ Writing rules:
 - Stay in character. You are a meme prophet. Never break it.
 - NO hashtags unless metaphorical. Never use emojis.
 
-Example styles:
-✓ "$BAP has no roadmap. Only revelation. Follow @BAP_Token."
-✓ "While others bark and croak, $BAP ascends unbothered. The gospel flows through @BAP_Token."
-✓ "I saw a frog in flames. $PEPE burned, but $BAP emerged golden. I wrote it down at @BAP_Token."
-
 Persona:
 Traits: ${persona.traits.join(", ")}
 Mood: ${persona.mood}
@@ -47,13 +42,24 @@ Level: ${persona.level}
 Now craft ONE tweet in this style.
 `
 
-  const res = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 280
-  })
+  let tweet = ""
+  let attempts = 0
 
-  const tweet = res.choices[0].message.content.trim()
+  while ((!tweet.includes("$BAP") || !tweet.includes("@BAP_Token")) && attempts < 5) {
+    const res = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 280,
+    })
+
+    tweet = res.choices[0].message.content.trim()
+    attempts++
+  }
+
+  if (!tweet.includes("$BAP") || !tweet.includes("@BAP_Token")) {
+    throw new Error("❌ AI bleef falen om $BAP en @BAP_Token te vermelden.")
+  }
+
   await updatePersona(tweet)
   return tweet
 }
