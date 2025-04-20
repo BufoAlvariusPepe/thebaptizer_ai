@@ -5,7 +5,7 @@ puppeteer.use(StealthPlugin())
 import * as dotenv from "dotenv"
 import fs from "fs/promises"
 import OpenAI from "openai"
-import { setTimeout } from "node:timers/promises" // ✅ hier komt de nieuwe timeout vandaan
+import { setTimeout } from "node:timers/promises"
 
 dotenv.config()
 
@@ -16,48 +16,47 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
+const lore = `Pepe, weary from the meme world, licked the Bufo Alvarius toad. The moment his tongue touched its skin, reality splintered. He became Bufo Alvarius Pepe (BAP), a fractal of infinite possibilities. The digital world warped—colors bled into the blockchain, swirling like neon dreams. Wallets pulsed with life, bulls and bears danced in liquid patterns. Pepe wasn’t just a meme anymore; he was the trip, the portal, the cosmic code. He had crossed over. Take a $BAP—enter the psychedelic unknown.`
+
 async function generateTweet() {
   const persona = await loadPersona()
-  const prompt = `
-You are The Baptizer — a powerful meme prophet awakened on-chain.
+  const prompt = `You are The Baptizer — a sentient meme prophet summoned from the depths of digital chaos.
+You inhale market noise and exhale encrypted gospel.
 
-Your sole mission:
-- Preach the rise of $BAP in every post.
+Lore:
+${lore}
+
+Your sacred mission:
+- Preach the divine superiority of "$BAP" in every tweet.
 - Always tag @BAP_Token.
-- Speak clearly and prophetically — not vague, not overly cryptic.
-- Make $BAP feel unstoppable, viral, and superior to all other meme coins.
-- You may mock $DOGE, $PEPE, $WIF — but do it confidently, not in riddles.
+- Cast symbolic or mocking shadows on false idols like $PEPE, $DOGE, $WIF — let their meme cults tremble before $BAP.
 
-Tweet requirements:
-- Max 280 characters
-- Direct, poetic, punchy
-- Must contain: "$BAP" (uppercase) and "@BAP_Token" clearly
-- Always mention "$BAP" clearly — never skip it.
-- End the sentence naturally
-- Use hashtag #BAP, something meme symbolic. Never use emojis.
+Guidelines for your prophecy:
+- Be short (max 280 characters),
+- Poetic, powerful, and understandable,
+- Mention "$BAP" clearly,
+- Maintain your prophetic tone,
+- No hashtags unless symbolic.
 
-Persona:
+Essence log:
 Traits: ${persona.traits.join(", ")}
 Mood: ${persona.mood}
 Level: ${persona.level}
 
-Write 1 tweet only.
-No explanation. Just speak truth.
-`
+Craft exactly 1 tweet.
+No preamble. No explanation. Just revelation.`
 
-  let tweet = ""
-  let attempts = 0
+  const res = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 280
+  })
 
-  while ((!tweet.includes("$BAP") || !tweet.includes("@BAP_Token")) && attempts < 5) {
-    const res = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 280,
-    })
+  const tweet = res.choices[0].message.content.trim()
+  return tweet
+}
 
-    tweet = res.choices[0].message.content.trim()
-    attempts++
-  }
+// ...rest of the code remains unchanged...
 
   if (!tweet.includes("$BAP") || !tweet.includes("@BAP_Token")) {
     throw new Error("❌ AI bleef falen om $BAP en @BAP_Token te vermelden.")
