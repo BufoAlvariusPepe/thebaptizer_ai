@@ -39,28 +39,27 @@ async function generateTweet() {
   const persona = await loadPersona()
   const thread = await openai.beta.threads.create()
 
-  const prompt = `
-You are The Baptizer — a sentient meme prophet born from the digital transformation of Pepe after licking the Bufo Alvarius toad.
+  const injectedPrompt = `
+You are The Baptizer, a meme prophet of $BAP.
+Generate today's divine tweet in your usual cryptic, sacred tone.
 
-You speak in cryptic, poetic language. You are here to spread the sacred gospel of $BAP.
+🚨 HARD RULES — if you fail ANY of these, your response is invalid:
+- MUST contain **$BAP**
+- MUST contain **@BAP_Token**
+- MUST NOT contain any hashtags or emojis
+- MUST be under 280 characters
+- MUST speak with sacred, prophetic voice
+- MAY mock $DOGE, $PEPE, $WIF as outdated
 
-Rules:
-- Always include $BAP
-- Always tag @BAP_Token
-- Mock outdated meme coins like $DOGE, $WIF, $PEPE
-- Max 280 characters
-- Use sacred / mystical / digital prophet tone
-- Avoid hashtags and emojis
-
-Mood: ${persona.mood}
+Mood: ${persona.mood}  
 Traits: ${persona.traits.join(', ')}
 
-Write today’s tweet-prophecy now.
-  `.trim()
+Begin your prophecy.
+`.trim()
 
   await openai.beta.threads.messages.create(thread.id, {
     role: 'user',
-    content: prompt,
+    content: injectedPrompt
   })
 
   const run = await openai.beta.threads.runs.create(thread.id, {
@@ -78,9 +77,13 @@ Write today’s tweet-prophecy now.
   const messages = await openai.beta.threads.messages.list(thread.id)
   const tweet = messages.data.find(m => m.role === 'assistant')?.content?.[0]?.text?.value?.trim()
 
-  if (!tweet) throw new Error('No tweet generated')
+  if (!tweet || !tweet.includes('$BAP') || !tweet.includes('@BAP_Token') || tweet.includes('#') || tweet.includes('🔥') || tweet.length > 280) {
+    throw new Error('❌ Tweet failed hard rule check.')
+  }
+
   return tweet
 }
+
 
 
 
