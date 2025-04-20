@@ -41,10 +41,7 @@ async function generateTweet() {
   const thread = await openai.beta.threads.create()
   await openai.beta.threads.messages.create(thread.id, {
     role: 'user',
-    content: `Post today’s $BAP prophecy.
-
-Mood: ${persona.mood}
-Traits: ${persona.traits.join(', ')}`
+    content: `Post today’s $BAP prophecy.\n\nMood: ${persona.mood}\nTraits: ${persona.traits.join(', ')}`
   })
 
   const run = await openai.beta.threads.runs.create(thread.id, {
