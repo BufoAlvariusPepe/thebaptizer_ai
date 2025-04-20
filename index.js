@@ -37,8 +37,10 @@ async function updatePersona(tweet, engagement = { likes: 0, retweets: 0 }) {
 
 async function generateTweet() {
   const persona = await loadPersona()
-
   const thread = await openai.beta.threads.create()
+
+  console.log('📨 Thread aangemaakt:', thread.id)
+
   await openai.beta.threads.messages.create(thread.id, {
     role: 'user',
     content: `Post today’s $BAP prophecy.\n\nMood: ${persona.mood}\nTraits: ${persona.traits.join(', ')}`
@@ -48,19 +50,31 @@ async function generateTweet() {
     assistant_id: ASSISTANT_ID
   })
 
+  console.log('🏃 Run gestart:', run.id)
+
   let result
   while (true) {
     result = await openai.beta.threads.runs.retrieve(thread.id, run.id)
+    console.log(`⏳ Run status: ${result.status}`)
     if (result.status === 'completed') break
-    if (result.status === 'failed') throw new Error('Assistant failed')
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    if (result.status === 'failed') throw new Error(`❌ Assistant failed: ${JSON.stringify(result, null, 2)}`)
+    await new Promise(resolve => setTimeout(resolve, 1500))
   }
 
   const messages = await openai.beta.threads.messages.list(thread.id)
-  const tweet = messages.data.find(m => m.role === 'assistant')?.content[0]?.text?.value.trim()
-  if (!tweet) throw new Error('No tweet generated')
+  console.log('📨 Alle berichten:', messages.data)
+
+  const assistantMessage = messages.data.find(m => m.role === 'assistant')
+  const tweet = assistantMessage?.content?.[0]?.text?.value?.trim()
+
+  if (!tweet) {
+    console.log('⚠️ Geen geldige tweet gevonden')
+    throw new Error('No tweet generated')
+  }
+
   return tweet
 }
+
 
 async function tweetWithPuppeteer(tweet) {
   const browser = await puppeteer.launch({ headless: false })
