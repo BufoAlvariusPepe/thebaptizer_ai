@@ -1,4 +1,4 @@
-// baptizer.js — autonome $BAP AI agent met gekoppelde OpenAI Assistant
+// baptizer.js — autonome $BAP AI agent met gekoppelde OpenAI assistant
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import fs from 'fs/promises'
@@ -13,8 +13,6 @@ const COOKIES_PATH = './cookies.json'
 const PERSONA_PATH = './persona.json'
 const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
-const lore = `Pepe, weary from the meme world, licked the Bufo Alvarius toad...`
 
 async function loadPersona() {
   try {
@@ -43,23 +41,27 @@ async function generateTweet() {
   const thread = await openai.beta.threads.create()
   await openai.beta.threads.messages.create(thread.id, {
     role: 'user',
-    content: 'Post today’s $BAP prophecy.'
+    content: `Post today’s $BAP prophecy.
+
+Mood: ${persona.mood}
+Traits: ${persona.traits.join(', ')}`
   })
 
   const run = await openai.beta.threads.runs.create(thread.id, {
-    assistant_id: ASSISTANT_ID,
-    instructions: `Mood: ${persona.mood}. Traits: ${persona.traits.join(", ")}.`
+    assistant_id: ASSISTANT_ID
   })
 
-  let status = 'queued'
-  while (status === 'queued' || status === 'in_progress') {
-    await setTimeout(2000)
-    const result = await openai.beta.threads.runs.retrieve(thread.id, run.id)
-    status = result.status
+  let result
+  while (true) {
+    result = await openai.beta.threads.runs.retrieve(thread.id, run.id)
+    if (result.status === 'completed') break
+    if (result.status === 'failed') throw new Error('Assistant failed')
+    await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const messages = await openai.beta.threads.messages.list(thread.id)
-  const tweet = messages.data[0].content[0].text.value.trim()
+  const tweet = messages.data.find(m => m.role === 'assistant')?.content[0]?.text?.value.trim()
+  if (!tweet) throw new Error('No tweet generated')
   return tweet
 }
 
@@ -72,7 +74,7 @@ async function tweetWithPuppeteer(tweet) {
     await page.setCookie(...cookies)
     console.log('✅ Cookies geladen')
   } catch {
-    console.log('🔐 Geen geldige cookies gevonden')
+    console.log('🔐 Login vereist')
   }
 
   await page.goto('https://x.com/compose/tweet', { waitUntil: 'networkidle2' })
@@ -85,14 +87,13 @@ async function tweetWithPuppeteer(tweet) {
     await page.click('div[data-testid="tweetButton"]')
     console.log('✅ Tweet knop geklikt')
   } catch {
-    console.log('⚠️ Tweet knop niet gevonden — fallback naar Cmd+Enter')
+    console.log('⚠️ Fallback Cmd+Enter')
     await page.keyboard.down('Meta')
     await page.keyboard.press('Enter')
     await page.keyboard.up('Meta')
   }
 
   await setTimeout(2000)
-
   let likes = 0, retweets = 0
   try {
     const metrics = await page.$$eval('div[data-testid="like"], div[data-testid="retweet"]', els =>
@@ -103,14 +104,17 @@ async function tweetWithPuppeteer(tweet) {
       if (m.includes('like')) likes = val
       if (m.includes('retweet')) retweets = val
     }
-  } catch {}
+    console.log(`📊 Engagement: ❤️ ${likes}, 🔁 ${retweets}`)
+  } catch {
+    console.log('⚠️ Engagement ophalen mislukt')
+  }
 
   await updatePersona(tweet, { likes, retweets })
   await browser.close()
 }
 
-(async () => {
+;(async () => {
   const tweet = await generateTweet()
-  console.log('📝 Generated:', tweet)
+  console.log('📝 Tweet:', tweet)
   await tweetWithPuppeteer(tweet)
 })()
