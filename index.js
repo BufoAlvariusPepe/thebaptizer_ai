@@ -36,27 +36,33 @@ async function updatePersona(tweet, engagement = { likes: 0, retweets: 0 }) {
 }
 
 async function generateTweet() {
-  const thread = await openai.beta.threads.create()
+  const persona = await loadPersona()
 
+  const thread = await openai.beta.threads.create()
   await openai.beta.threads.messages.create(thread.id, {
     role: 'user',
-    content: "Post today’s $BAP prophecy."
+    content: 'Post today’s $BAP prophecy.',
   })
 
   const run = await openai.beta.threads.runs.create(thread.id, {
-    assistant_id: ASSISTANT_ID
+    assistant_id: process.env.OPENAI_ASSISTANT_ID,
+    instructions: `Mood: ${persona.mood}. Traits: ${persona.traits.join(", ")}.`,
   })
 
-  let runStatus
-  do {
-    runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id)
-    if (runStatus.status !== 'completed') await setTimeout(1000)
-  } while (runStatus.status !== 'completed')
+  // Wacht op voltooiing
+  let status = "queued"
+  while (status === "queued" || status === "in_progress") {
+    await setTimeout(2000)
+    const result = await openai.beta.threads.runs.retrieve(thread.id, run.id)
+    status = result.status
+  }
 
+  // Haal gegenereerde tweet op
   const messages = await openai.beta.threads.messages.list(thread.id)
-  const reply = messages.data.find(m => m.role === 'assistant')
-  return reply?.content?.[0]?.text?.value?.trim() || '[no tweet generated]'
+  const tweet = messages.data[0].content[0].text.value.trim()
+  return tweet
 }
+
 
 async function tweetWithPuppeteer(tweet) {
   const browser = await puppeteer.launch({ headless: false })
