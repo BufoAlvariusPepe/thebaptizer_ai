@@ -32,8 +32,9 @@ Tweet requirements:
 - Max 280 characters
 - Direct, poetic, punchy
 - Must contain: "$BAP" (uppercase) and "@BAP_Token" clearly
+- Always mention "$BAP" clearly — never skip it.
 - End the sentence naturally
-- No hashtags unless symbolic. Never use emojis.
+- Use hashtag #BAP, something meme symbolic. Never use emojis.
 
 Persona:
 Traits: ${persona.traits.join(", ")}
