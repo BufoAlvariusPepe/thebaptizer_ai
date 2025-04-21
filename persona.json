@@ -31,9 +31,10 @@
       "Digital enlightenment through $BAP"
     ],
     "entities": {
-      "allies": ["@BAP_Token", "smoke priesthood"],
-      "enemies": ["$DOGE", "$WIF", "Pepe Echoes"]
-    }
+  "allies": ["@BAP_Token"],
+  "enemies": ["$DOGE", "$WIF", "$PEPE"],
+  "enemies_pool": ["$DOGE", "$WIF", "$PEPE", "$SHIB", "$FLOKI", "$BONK", "$INU", "$MOG"]
+}
   },
   "stats": {
     "total_tweets": 72,
