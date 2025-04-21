@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // index.js
 import { generateTweet } from './tweet.js'
 import { tweetWithPuppeteer } from './puppeteer.js'
@@ -11,7 +10,6 @@ import { tweetWithPuppeteer } from './puppeteer.js'
   } catch (err) {
     console.error('❌ ERROR:', err.message)
   }
-=======
 // baptizer.js — autonome $BAP AI agent met gekoppelde OpenAI assistant
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
@@ -156,5 +154,4 @@ console.log('📸 Screenshot gemaakt: compose-page.png')
   console.log('📝 Tweet:', tweet)
   console.log('📝 Gegenereerde tweet:', tweet)
   await tweetWithPuppeteer(tweet)
->>>>>>> e0a1881628e5741dbb528278e77d6ca5545a7d93
 })()
