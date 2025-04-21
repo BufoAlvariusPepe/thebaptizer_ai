@@ -1,1 +1,6 @@
 .env
+cookies.json
+node_modules
+tweet-failure.png
+after-focus.png
+
