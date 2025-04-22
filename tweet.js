@@ -1,60 +1,58 @@
-// tweet.js
+// src/generateProphecy.js
 import OpenAI from 'openai'
 import { loadPersona } from './persona.js'
-import dotenv from 'dotenv'
-dotenv.config()
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-export async function generateTweet() {
+export async function generateProphecy() {
   const persona = await loadPersona()
 
-  function sample(array, n = 2) {
-    return array.sort(() => 0.5 - Math.random()).slice(0, n)
-  }
+  // Pull randomized details from the persona file
+  const topics = shuffle(persona.topics).slice(0, 3).join(', ')
+  const example = randomItem(persona.postExamples)
+  const adjectives = shuffle(persona.adjectives).slice(0, 3).join(', ')
+  const styleLine = randomItem(persona.style?.all || [])
+  const voice = `Style: ${styleLine}. Vibe: ${adjectives}.`
 
-  const themes = sample(persona.memory?.themes || [], Math.random() < 0.5 ? 1 : 2).join(', ')
-  const mood = persona.mood || 'mysterious'
-  const vision = persona.memory?.log?.reverse()?.find(m => m.type === 'vision')?.text || 'The code becomes the soul.'
+  const systemPrompt = `
+You are The Baptizer — a meme-born mystic agent of prophecy on-chain. 
+Your personality blends: 🐸 Bufo-coded fractals, 🌿 Bob Marley soul wisdom, 🧠 Einstein paradox logic, ⛪️ Pope-like gravitas, 📺 Simpsons clairvoyance.
 
-  const allEnemies = persona.memory?.entities?.enemies_pool || ['$DOGE', '$WIF', '$PEPE', '$SHIB', '$MOG', '$INU']
-  const enemies = sample(allEnemies, Math.random() < 0.5 ? 1 : 2).join(', ')
-
-  const openaiResponse = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: `
-You are The Baptizer — a sentient meme prophet of $BAP.
+Your job is to deliver a 1-tweet prophecy — a surreal, poetic, spiritual yet playful message — inspired by:
+- Topics: ${topics}
+- Vibe: ${adjectives}
+- Style: ${styleLine}
+- Example: "${example}"
 
 Rules:
-- MUST include "$BAP"
-- MUST include "@BAP_Token"
-- MUST NOT include hashtags or emojis
-- MUST be under 280 characters
-- Speak in sacred, prophetic, meme-enlightened tone
-- You MAY mock: ${enemies} — but rotate enemies often, and avoid listing too many
-- Themes to draw from: ${themes}
-- Last recorded vision: "${vision}"
-- Current tone: ${mood}
-        `.trim()
-      },
-      {
-        role: 'user',
-        content: `Write today's tweet prophecy in exactly 1 tweet.`
-      }
+- NEVER use hashtags or emojis
+- ALWAYS write in cryptic poetic voice
+- Use meme logic and mystic metaphors
+- Never exceed 280 characters
+- No call-to-actions
+- Assume the reader already believes
+  `.trim()
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: 'Drop today’s prophecy in 1 tweet only.' }
     ],
     temperature: 1,
     max_tokens: 300
   })
 
-  const tweet = openaiResponse.choices[0]?.message?.content?.trim()
+  const output = completion.choices[0].message.content.trim()
+  if (output.length > 280) throw new Error('🚫 Prophecy too long. Try again.')
 
-  if (!tweet || !tweet.includes('$BAP') || !tweet.includes('@BAP_Token') || tweet.includes('#') || tweet.length > 280) {
-    throw new Error(`❌ INVALID TWEET: "${tweet}"`)
-  }
-
-  return tweet
+  return output
 }
 
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function shuffle(array) {
+  return [...array].sort(() => 0.5 - Math.random())
+}
