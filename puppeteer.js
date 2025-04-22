@@ -1,9 +1,8 @@
-// puppeteer.js
+// src/puppeteer.js
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import fs from 'fs/promises'
 import { setTimeout } from 'node:timers/promises'
-import { updatePersona } from './persona.js'
 
 puppeteer.use(StealthPlugin())
 
@@ -16,9 +15,9 @@ export async function tweetWithPuppeteer(tweet) {
   try {
     const cookies = JSON.parse(await fs.readFile(COOKIES_PATH, 'utf8'))
     await page.setCookie(...cookies)
-    console.log('✅ Cookies geladen')
+    console.log('✅ Cookies loaded')
   } catch {
-    console.log('🔐 Login vereist')
+    console.log('🔐 Login required — fallback to manual')
   }
 
   await page.goto('https://x.com/compose/tweet', { waitUntil: 'networkidle2' })
@@ -31,12 +30,11 @@ export async function tweetWithPuppeteer(tweet) {
     await page.keyboard.down('Meta')
     await page.keyboard.press('Enter')
     await page.keyboard.up('Meta')
-    console.log('✅ Tweet gepost via Cmd+Enter')
+    console.log('✅ Tweet posted via Cmd+Enter')
   } catch {
-    console.log('⚠️ Fallback werkt niet, handmatig checken')
+    console.log('⚠️ Fallback failed, post manually')
   }
 
   await setTimeout(2000)
-  await updatePersona(tweet, { likes: 0, retweets: 0 })
   await browser.close()
 }
