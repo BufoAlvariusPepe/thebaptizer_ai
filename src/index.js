@@ -1,10 +1,10 @@
 // src/index.js
-import { generateTweet } from './tweet.js'
+import { generateProphecy } from './generateProphecy.js'
 import { tweetWithPuppeteer } from './puppeteer.js'
 
 const main = async () => {
   try {
-    const tweet = await generateTweet()
+const tweet = await generateProphecy()
     console.log(`🧵 Prophecy generated:\n${tweet}`)
     await tweetWithPuppeteer(tweet)
   } catch (err) {
